@@ -59,9 +59,9 @@
     </table>  -->
 
     <form action="/message" method="post">
-    <h2>Post a message:</h2>
-    <textarea rows="8" cols="150" name="message_content"></textarea>
-    <input type="submit" value="Post a message">
+        <h2>Post a message:</h2>
+        <textarea rows="8" cols="150" name="message_content"></textarea>
+        <input type="submit" value="Post a message">
     </form>
 
 
@@ -80,10 +80,10 @@
             {% endif %}
             {% endfor %}
            
-            <form action="/comment" method="post">
+            <form action="/comment/{{ messages.id }}" method="post">
             <h4>Post a comment:</h4>
             <textarea rows="4" cols="100" name="comment_content"></textarea>
-            <input type="hidden" name="messageidnumb" value="{{ messages.id }}">
+            <!-- <input type="hidden" name="messageidnumb" value="{{ messages.id }}"> This is another way to do it with a hidden field instead of passing message id in route-->
             <input type="submit" value="Post a comment">
             </form>
         </div>

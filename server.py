@@ -22,16 +22,16 @@ def login():
     input_password = request.form['password']
     email_query = "SELECT * FROM users WHERE email = :email_id"
     query_data = {'email_id': input_email}
-    stored_email = mysql.query_db(email_query, query_data)
+    user_record = mysql.query_db(email_query, query_data)
 
     if not EMAIL_REGEX.match(request.form['email']):
         flash("Email must be a valid email", 'error')
-    if not stored_email:
+    if not user_record:
         flash("User does not exist!")
         return redirect('/')
     else:
-        if md5.new(request.form['password']).hexdigest() == stored_email[0]['password']:
-            session['user_id'] = stored_email[0]['id']
+        if md5.new(request.form['password']).hexdigest() == user_record[0]['password']:
+            session['user_id'] = user_record[0]['id']
             return redirect('/wall')
         else:
             flash("Wrong password, try again!")
@@ -50,7 +50,7 @@ def register_user():
     input_email = request.form['email']
     email_query = "SELECT * FROM users WHERE email = :email_id"
     query_data = {'email_id': input_email}
-    stored_email = mysql.query_db(email_query, query_data)
+    user_record = mysql.query_db(email_query, query_data)
 
     print request.form
     print request.form['email']
@@ -78,11 +78,12 @@ def register_user():
     if request.form['password'] != request.form['confirm_password']:
         flash("Password and Password Confirmation should match", 'password')
 
-    if stored_email:
+    if user_record:
         flash("This email is not available, it has been TAKEN!")
 
 
     if '_flashes' in session:
+        #QANNA - is it ok to render here even though it's a POST it allows me to save form values after they don't pass validation.
         return redirect('/')
     else:
         flash("All Good!!!!", 'good')
@@ -101,10 +102,14 @@ def register_user():
 
 @app.route('/wall')
 def thewall():
+    print session
     # This displays all the users you have created
     query = "SELECT email, DATE_FORMAT(created_at,'%M %d %Y') as date FROM users"       
     emails = mysql.query_db(query)
-    
+
+    # if 'user_id' not in session - possibly do something here to allow someone not logged in to view the wall.
+
+
     id_query = "SELECT * FROM users WHERE id = :user_id"
     query_data = {'user_id': session['user_id']}
     name_query = mysql.query_db(id_query, query_data)
@@ -130,14 +135,16 @@ def postmessage():
     mysql.query_db(query, data)
     return redirect('/wall')
 
-@app.route('/comment', methods=['POST'])
-def postcomment():
+@app.route('/comment/<messid>', methods=['POST'])
+def postcomment(messid):
+
     #posts comments
     query = "INSERT INTO comments (comment, created_at, updated_at, user_id, message_id) VALUES (:comment, NOW(), NOW(), :id, :messageid)" 
     data = {
             'comment': request.form['comment_content'],
             'id': session['user_id'],
-            'messageid': int(request.form['messageidnumb']),
+            # 'messageid': int(request.form['messageidnumb']),
+            'messageid': messid,
             }
     mysql.query_db(query, data)
     return redirect('/wall')
