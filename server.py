@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, redirect, session, flash
 from mysqlconnection import MySQLConnector
-import re
-import md5 # imports the md5 module to generate a hash
+import re, md5
 
 EMAIL_REGEX = re.compile(r'^[a-zA-Z0-9.+_-]+@[a-zA-Z0-9._-]+\.[a-zA-Z]+$')
 NAME_REGEX = re.compile(r'[0-9]')
@@ -94,6 +93,7 @@ def register_user():
                 'email_id': request.form['email'],
                 'pass': md5.new(request.form['password']).hexdigest()
             }
+        #since INSERT returns last row id we set this equal to session to log in
         session['user_id'] = mysql.query_db(query, data)
 
         flash("This email address you entered " + input_email + " is a valid email address. Thank you!")
@@ -104,6 +104,7 @@ def thewall():
     # This displays all the users you have created
     query = "SELECT email, DATE_FORMAT(created_at,'%M %d %Y') as date FROM users"       
     emails = mysql.query_db(query)
+    
     id_query = "SELECT * FROM users WHERE id = :user_id"
     query_data = {'user_id': session['user_id']}
     name_query = mysql.query_db(id_query, query_data)
